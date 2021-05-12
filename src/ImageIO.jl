@@ -1,15 +1,18 @@
 module ImageIO
 
+using IndirectArrays # for indexed image
+
 using UUIDs
 using FileIO: File, DataFormat, Stream, stream, Formatted
 
+const idSixel = Base.PkgId(UUID("45858cf5-a6b0-47a3-bbea-62219f50df47"), "Sixel")
 const idNetpbm = Base.PkgId(UUID("f09324ee-3d7c-5217-9330-fc30815ba969"), "Netpbm")
 const idPNGFiles = Base.PkgId(UUID("f57f5aa1-a3ce-4bc8-8ab9-96f992907883"), "PNGFiles")
 const idTiffImages = Base.PkgId(UUID("731e570b-9d59-4bfa-96dc-6df516fadf69"), "TiffImages")
 
 # Enforce a type conversion to be backend independent (issue #25)
 # Note: If the backend does not provide efficient `convert` implementation,
-#       there will be an extra memeory allocation and thus hurt the performance.
+#       there will be an extra memory allocation and thus hurt the performance.
 for FMT in (
     :PBMBinary, :PGMBinary, :PPMBinary, :PBMText, :PGMText, :PPMText,
     :TIFF,
@@ -19,6 +22,10 @@ for FMT in (
         Array{T,N}
 end
 @inline canonical_type(::Formatted{T}, data) where T = canonical_type(T(), data)
+
+# sixel is an indexed image format; using `IndirectArray` is memory efficient.
+@inline canonical_type(::DataFormat{:SIXEL}, ::AbstractArray{T,N}) where {T,N} = Array{T,N}
+@inline canonical_type(::DataFormat{:SIXEL}, ::AT) where {AT<:IndirectArray} = AT
 
 ## PNGs
 
@@ -101,6 +108,23 @@ function save(s::Stream{DataFormat{:TIFF}}, image::S; permute_horizontal=false, 
     else
         Base.invokelatest(checked_import(idTiffImages).save, stream(s), imgout)
     end
+end
+
+## Sixel
+# Sixel.jl itself provides `fileio_load`/`fileio_save` so we simply delegate everything to it
+function load(f::File{DataFormat{:SIXEL}}; kwargs...)
+    data = Base.invokelatest(checked_import(idSixel).fileio_load, f, kwargs...)
+    return convert(canonical_type(f, data), data)
+end
+function load(s::Stream{DataFormat{:SIXEL}}; kwargs...)
+    data = Base.invokelatest(checked_import(idSixel).fileio_load, s, kwargs...)
+    return convert(canonical_type(s, data), data)
+end
+function save(f::File{DataFormat{:SIXEL}}, image::AbstractArray; kwargs...)
+    Base.invokelatest(checked_import(idSixel).fileio_save, f, image; kwargs...)
+end
+function save(f::Stream{DataFormat{:SIXEL}}, image::AbstractArray; kwargs...)
+    Base.invokelatest(checked_import(idSixel).fileio_save, f, image; kwargs...)
 end
 
 ## Function names labelled for FileIO. Makes FileIO lookup quicker
