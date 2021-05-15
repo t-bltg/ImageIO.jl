@@ -5,7 +5,6 @@ version = "0.5.4"
 
 [deps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-IndirectArrays = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 Netpbm = "f09324ee-3d7c-5217-9330-fc30815ba969"
 PNGFiles = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
 Sixel = "45858cf5-a6b0-47a3-bbea-62219f50df47"
@@ -15,7 +14,6 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 [compat]
 FileIO = "1.2"
 ImageCore = "0.8.1, 0.9"
-IndirectArrays = "0.5"
 Netpbm = "1.0"
 PNGFiles = "0.3"
 Sixel = "0.1"

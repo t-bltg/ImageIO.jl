@@ -1,7 +1,5 @@
 module ImageIO
 
-using IndirectArrays # for indexed image
-
 using UUIDs
 using FileIO: File, DataFormat, Stream, stream, Formatted
 
@@ -17,15 +15,12 @@ for FMT in (
     :PBMBinary, :PGMBinary, :PPMBinary, :PBMText, :PGMText, :PPMText,
     :TIFF,
     :PNG,
+    :SIXEL, # TODO: sixel is an indexed image format and could use more efficient representation
 )
     @eval canonical_type(::DataFormat{$(Expr(:quote, FMT))}, ::AbstractArray{T, N}) where {T,N} =
         Array{T,N}
 end
 @inline canonical_type(::Formatted{T}, data) where T = canonical_type(T(), data)
-
-# sixel is an indexed image format; using `IndirectArray` is memory efficient.
-@inline canonical_type(::DataFormat{:SIXEL}, ::AbstractArray{T,N}) where {T,N} = Array{T,N}
-@inline canonical_type(::DataFormat{:SIXEL}, ::AT) where {AT<:IndirectArray} = AT
 
 ## PNGs
 
